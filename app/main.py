@@ -1,3 +1,4 @@
+from turtle import title
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from typing import Optional
@@ -41,7 +42,7 @@ def root():
 @app.get("/sqlalchemy")
 def test_posts(db: Session = Depends(get_db)):
     
-    posts = db.query(models.Post).all()
+    posts = db.query(models.Post).order_by(models.Post.id).all()
     return {"data": posts}
 
 @app.get("/posts")
@@ -97,32 +98,42 @@ def get_post(id: int , db: Session = Depends(get_db)):
 
 
 @app.delete("/posts/{id}" , status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(id: int):
+def delete_post(id: int, db: Session = Depends(get_db)):
 
-    cursor.execute("""DELETE FROM posts WHERE id = %s RETURNING *"""
-                   , (str(id),))
-    deleted_post = cursor.fetchone()
-    conn.commit()
+    # cursor.execute("""DELETE FROM posts WHERE id = %s RETURNING *"""
+    #                , (str(id),))
+    # deleted_post = cursor.fetchone()
+    # conn.commit()
+    post = db.query(models.Post).filter(models.Post.id == id)
     
-    if deleted_post==None:
+    if post.first()==None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"post with id {id} does not exist.")
+        
+    post.delete()    
+    db.commit()   
     
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @app.put("/posts/{id}")
-def update_post(id: int , post:Post):
+def update_post(id: int , updated_post:Post, db: Session = Depends(get_db)):
     
-    cursor.execute("""UPDATE posts SET title = %s, content =  %s, published = %s WHERE id = %s RETURNING *"""
-                   , (post.title, post.content, post.published, (str(id))))
-    updated_post = cursor.fetchone()
-    conn.commit()
+    # cursor.execute("""UPDATE posts SET title = %s, content =  %s, published = %s WHERE id = %s RETURNING *"""
+    #                , (post.title, post.content, post.published, (str(id))))
+    # updated_post = cursor.fetchone()
+    # conn.commit()
+    post_query = db.query(models.Post).filter(models.Post.id == id)
+    post = post_query.first()
     
-    if updated_post == None:
+    if post == None:
     # really important lesson that i get here is if not index is true even index==0 and we should use NONE here.
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"post with id {id} does not exist.")
+    post_query.update(updated_post.model_dump())
+    
+    db.commit()
+    
         
     return {"data": updated_post}
 
