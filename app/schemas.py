@@ -10,8 +10,11 @@ class PostCreate(PostBase):
     pass
 
 
-class Response(PostBase):
+class Response(BaseModel):
     id: int
+    title: str
+    content: str    
+    published: bool = True
     created_at: datetime
     
     class Config:
