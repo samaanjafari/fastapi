@@ -49,7 +49,7 @@ def test_posts(db: Session = Depends(get_db)):
 def get_posts(db: Session = Depends(get_db)):
     # cursor.execute("""SELECT * FROM posts""")
     # posts = cursor.fetchall()
-    # #print(posts)
+    #print(posts)
     posts = db.query(models.Post).all()
     return {"data": posts}
 
@@ -60,6 +60,7 @@ def create_post(post : Post, db: Session = Depends(get_db)):
     #                , (post.title, post.content, post.published))
     # new_post = cursor.fetchone()
     # conn.commit()
+    print(post)
     new_post = models.Post(**post.model_dump())
     '''we are using post.dict() and we unpack it with **kwargs method and it automatically fill our
     need columns and put it into right place and we do not have to fill it manually anymore every
@@ -133,7 +134,6 @@ def update_post(id: int , updated_post:Post, db: Session = Depends(get_db)):
     post_query.update(updated_post.model_dump())
     
     db.commit()
-    
-        
+       
     return {"data": updated_post}
 
