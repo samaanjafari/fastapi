@@ -13,7 +13,7 @@ class PostCreate(PostBase):
 class Response(BaseModel):
     id: int
     title: str
-    content: str    
+    content: str   
     published: bool = True
     created_at: datetime
     
