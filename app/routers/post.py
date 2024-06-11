@@ -4,9 +4,12 @@ from ..database import  get_db
 from sqlalchemy.orm import Session
 from typing import List
 
-router = APIRouter()
+router = APIRouter(
+    prefix= "/posts",
+    tags= ['Posts']
+)
 
-@router.get("/posts", response_model= List[schemas.Response])
+@router.get("/", response_model= List[schemas.Response])
 def get_posts(db: Session = Depends(get_db)):
     # cursor.execute("""SELECT * FROM posts""")
     # posts = cursor.fetchall()
@@ -15,7 +18,7 @@ def get_posts(db: Session = Depends(get_db)):
     return  posts
 
  
-@router.post("/posts", status_code=status.HTTP_201_CREATED, response_model=schemas.Response)
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.Response)
 def create_post(post : schemas.PostCreate, db: Session = Depends(get_db)):   
     # cursor.execute("""INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) RETURNING *  """
     #                , (post.title, post.content, post.published))
@@ -32,7 +35,7 @@ def create_post(post : schemas.PostCreate, db: Session = Depends(get_db)):
     return  new_post
 
 
-@router.get("/posts/{id}", response_model= schemas.Response)
+@router.get("/{id}", response_model= schemas.Response)
 def get_post(id: int , db: Session = Depends(get_db)):
     # cursor.execute("""SELECT * FROM posts WHERE id = (%s) """ , (str(id),))
     '''the comma after str(id), is for if we don't pass that comma it doesn't different from
@@ -50,7 +53,7 @@ def get_post(id: int , db: Session = Depends(get_db)):
     return post 
 
 
-@router.delete("/posts/{id}" , status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{id}" , status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id: int, db: Session = Depends(get_db)):
 
     # cursor.execute("""DELETE FROM posts WHERE id = %s RETURNING *"""
@@ -69,7 +72,7 @@ def delete_post(id: int, db: Session = Depends(get_db)):
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.put("/posts/{id}", response_model= schemas.Response)
+@router.put("/{id}", response_model= schemas.Response)
 def update_post(id: int , updated_post:schemas.PostCreate, db: Session = Depends(get_db)):
     
     # cursor.execute("""UPDATE posts SET title = %s, content =  %s, published = %s WHERE id = %s RETURNING *"""
