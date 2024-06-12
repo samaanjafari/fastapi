@@ -9,7 +9,7 @@ import time
 from sqlalchemy.orm import Session
 from .  import models, schemas, utils
 from .database import engine, get_db
-from .routers import user, post
+from .routers import posts, users
 
 
 models.Base.metadata.create_all(bind=engine)
@@ -30,8 +30,8 @@ while True:
         print("Error is:", error)
         time.sleep(4)
            
-app.include_router(post.router)
-app.include_router(user.router)
+app.include_router(posts.router)
+app.include_router(users.router)
  
     
 @app.get("/")
