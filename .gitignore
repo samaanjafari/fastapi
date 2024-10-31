@@ -2,3 +2,4 @@ __pycache__/
 venv/
 Recepies.txt
 app/routers/__pycache__/
+.env

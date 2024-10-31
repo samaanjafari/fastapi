@@ -83,7 +83,9 @@ match with {id} so we have to move /latest path before our general one.'''
 
 @app.get("/posts/{id}")
 def get_post(id: int , response:Response):
-    post = find_post(id)
+    cursor.execute(f"""SELECT * FROM posts WHERE id = {id} """)
+    post = cursor.fetchone()
+
     #if not post   means ==>    if post==None
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,

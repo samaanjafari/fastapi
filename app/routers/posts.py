@@ -2,19 +2,30 @@ from .. import models, oauth2, schemas
 from fastapi import Body, FastAPI , Response , status , HTTPException, Depends, APIRouter
 from ..database import  get_db
 from sqlalchemy.orm import Session
-from typing import List
+from sqlalchemy import func
+from typing import List, Optional
 
 router = APIRouter(
     prefix= "/posts",
     tags= ['Posts']
 )
 
-@router.get("/", response_model= List[schemas.PostResponse])
-def get_posts(db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
-    # cursor.execute("""SELECT * FROM posts""")
-    # posts = cursor.fetchall()
-    #print(posts)
-    posts = db.query(models.Post).all()
+@router.get("/", response_model= List[schemas.PostOut])
+def get_posts(db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user),
+              limit: int = 10, skip: int = 0, search: Optional[str] = ""):
+
+    
+    #for private routes that may you like the flow of application works like a notepad private session:
+    '''posts = db.query(models.Post).filter(models.Post.owner_id == current_user.id).all()'''
+    
+    posts_query = db.query(models.Post, func.count(models.Vote.post_id).label("votes")).join(
+        models.Vote, models.Post.id == models.Vote.post_id, isouter= True).group_by(
+            models.Post.id).filter(models.Post.title.contains(search)).limit(limit).offset(skip)
+        
+    posts = db.execute(posts_query).mappings().all()
+    
+    # print(new_results)
+    
     return  posts
 
  
@@ -36,7 +47,7 @@ def create_post(post : schemas.PostCreate, db: Session = Depends(get_db),
     return  new_post
 
 
-@router.get("/{id}", response_model= schemas.PostResponse)
+@router.get("/{id}", response_model= schemas.PostOut)
 def get_post(id: int , db: Session = Depends(get_db), current_user : models.User = Depends(oauth2.get_current_user)):
     # cursor.execute("""SELECT * FROM posts WHERE id = (%s) """ , (str(id),))
     '''the comma after str(id), is for if we don't pass that comma it doesn't different from
@@ -44,7 +55,9 @@ def get_post(id: int , db: Session = Depends(get_db), current_user : models.User
     sql injection so we have to pass that comma to specify thay it is a single tuple.'''
     # post = cursor.fetchone()
     #print(post)
-    post = db.query(models.Post).filter(models.Post.id == id).first()
+    post = db.query(models.Post, func.count(models.Vote.post_id).label("votes")).join(
+        models.Vote, models.Post.id == models.Vote.post_id, isouter= True).group_by(
+            models.Post.id).filter(models.Post.id == id).first()
 
 
     if not post:
@@ -104,3 +117,4 @@ def update_post(id: int , updated_post:schemas.PostCreate, db: Session = Depends
     db.commit()
        
     return  post_query.first()
+
